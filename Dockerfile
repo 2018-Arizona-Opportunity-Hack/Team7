@@ -18,6 +18,8 @@ RUN su - -c "R -e \"install.packages('shinydashboard', repos='http://cran.rstudi
 RUN su - -c "R -e \"install.packages('rlist', repos='http://cran.rstudio.com/')\""
 RUN su - -c "R -e \"install.packages('knitr', repos='http://cran.rstudio.com/')\""
 RUN su - -c "R -e \"install.packages('RSAGA', repos='http://cran.rstudio.com/')\""
+RUN su - -c "R -e \"install.packages('pathological', repos='http://cran.rstudio.com/')\""
+RUN su - -c "R -e \"install.packages('ECharts2Shiny', repos='http://cran.rstudio.com/')\""
 
 RUN rm -rf /srv/shiny-server/*
 COPY app.r /srv/shiny-server
