@@ -1,9 +1,9 @@
 FROM mysql
 COPY survey-stack.sql /docker-entrypoint-initdb.d/
 
-RUN sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu trusty/" >> /etc/apt/sources.list'
-RUN gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
-RUN gpg -a --export E084DAB9 | apt-key add -
+RUN add-apt-repository "deb http://cran.rstudio.com/bin/linux/ubuntu $(lsb_release -sc)/"
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
+RUN add-apt-repository ppa:marutter/rdev
 RUN apt-get update
 RUN apt-get -y install r-base gdebi-core
 
