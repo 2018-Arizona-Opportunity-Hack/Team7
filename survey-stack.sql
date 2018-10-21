@@ -37,7 +37,7 @@ create table response
   resp text null,
   foreign key (q_id)
 	references question(id)
-)
+);
 DELIMITER //
 
 create procedure create_survey(in in_name varchar(50), in in_description text, in in_tags text)
