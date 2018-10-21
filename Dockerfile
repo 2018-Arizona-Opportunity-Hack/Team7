@@ -21,5 +21,5 @@ RUN su - -c "R -e \"install.packages('RSAGA', repos='http://cran.rstudio.com/')\
 
 RUN curl -o shiny-server-1.5.9.923-amd64.deb https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.9.923-amd64.deb
 
-RUN gpkg -i shiny-server-1.5.9.923-amd64.deb
+RUN dpkg -i shiny-server-1.5.9.923-amd64.deb
 RUN service shiny-server restart
