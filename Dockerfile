@@ -1,7 +1,7 @@
 FROM mysql
 COPY survey-stack.sql /docker-entrypoint-initdb.d/
 
-RUN apt-get update
+RUN apt-get update -y
 
 RUN apt-get -y install dirmngr --install-recommends
 RUN apt-get -y install software-properties-common
@@ -9,7 +9,7 @@ RUN apt-get -y install apt-transport-https
 
 RUN apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
 RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/debian stretch-cran35/'
-RUN apt-get update
+RUN apt-get update -y
 
 RUN apt-get -y install r-base gdebi-core curl
 
