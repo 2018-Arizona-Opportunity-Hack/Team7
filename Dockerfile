@@ -1,7 +1,5 @@
 FROM mysql
 COPY survey-stack.sql /docker-entrypoint-initdb.d/
-RUN touch /docker-entrypoint-initdb.d/start-shiny.sh
-RUN echo "shiny-server" >> /docker-entrypoint-initdb.d/start-shiny.sh
 
 RUN apt-get update
 
@@ -25,5 +23,3 @@ RUN curl -o shiny-server-1.5.9.923-amd64.deb https://download3.rstudio.org/ubunt
 
 RUN dpkg -i shiny-server-1.5.9.923-amd64.deb
 RUN service shiny-server restart
-
-RUN usermod -a -G shiny mysql
