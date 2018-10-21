@@ -1,6 +1,6 @@
 if [ $(dpkg-query -W -f='${Status}' docker 2>/dev/null | grep -c "ok installed") -eq 0 ];
 then
-  apt-get -y install docker;
+  apt-get -y install docker-ce;
 fi
 if [ $(dpkg-query -W -f='${Status}' git 2>/dev/null | grep -c "ok installed") -eq 0 ];
 then
