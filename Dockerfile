@@ -5,7 +5,7 @@ RUN sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu trusty/" >> /etc/a
 RUN gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
 RUN gpg -a --export E084DAB9 | apt-key add -
 RUN apt-get update
-RUN apt-get -y install r-base libapparmor1 libcurl4-gnutls-dev libxml2-dev libssl-dev gdebi-core
+RUN apt-get -y install r-base gdebi-core
 
 RUN su - -c "R -e \"install.packages('shiny', repos = 'http://cran.rstudio.com/')\""
 RUN su - -c "R -e \"install.packages('shinydashboard', repos='http://cran.rstudio.com/')\""
