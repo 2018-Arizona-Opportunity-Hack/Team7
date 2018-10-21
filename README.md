@@ -1,6 +1,3 @@
-Survey Manager
- - mysql-gcu-hackathon
-
 ## Survey Manager
 ### Description
 Survey Manager exists to solve data problems for organizations who anywhere along the 3 stage human-data-collection-via-paper-survey journey. Organizations may struggle with data input, data management, and data analysis. This solution was designed to run on lower specification
