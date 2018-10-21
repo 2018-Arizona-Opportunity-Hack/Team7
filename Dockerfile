@@ -21,6 +21,9 @@ RUN su - -c "R -e \"install.packages('knitr', repos='http://cran.rstudio.com/')\
 RUN su - -c "R -e \"install.packages('RSAGA', repos='http://cran.rstudio.com/')\""
 RUN su - -c "R -e \"install.packages('odbc', repos='http://cran.rstudio.com/')\""
 
+RUN curl -o libmysqlclient.deb http://ftp.us.debian.org/debian/pool/main/m/mysql-5.5/libmysqlclient18_5.5.60-0+deb8u1_amd64.deb
+RUN dpkg -i libmysqlclient.deb
+
 RUN curl -o libmyodbc.deb http://launchpadlibrarian.net/141005765/libmyodbc_5.1.10-3_amd64.deb
 RUN dpkg -i libmyodbc.deb
 
