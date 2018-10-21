@@ -1,7 +1,5 @@
 if [ $(dpkg-query -W -f='${Status}' docker 2>/dev/null | grep -c "ok installed") -eq 0 ];
 then
-<<<<<<< Updated upstream
-=======
   apt-get update -y
   apt-get install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common
   curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
@@ -9,7 +7,6 @@ then
   apt-get update -y
   apt-get install -y docker-ce
   apt-get install
->>>>>>> Stashed changes
   apt-get -y install docker-ce;
 fi
 if [ $(dpkg-query -W -f='${Status}' git 2>/dev/null | grep -c "ok installed") -eq 0 ];
