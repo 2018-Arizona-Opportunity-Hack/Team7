@@ -24,8 +24,8 @@ RUN su - -c "R -e \"install.packages('pathological', repos='http://cran.rstudio.
 RUN su - -c "R -e \"install.packages('ECharts2Shiny', repos='http://cran.rstudio.com/')\""
 
 RUN rm -rf /srv/shiny-server/*
-COPY app.r /srv/shiny-server
-COPY mock.csv /srv/shiny-server
+COPY app.r /srv/shiny-server/app.r
+COPY mock.csv /srv/shiny-server/mock.csv
 
 RUN curl -o shiny-server-1.5.9.923-amd64.deb https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.9.923-amd64.deb
 
