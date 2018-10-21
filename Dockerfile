@@ -1,6 +1,8 @@
 FROM mysql
 COPY survey-stack.sql /docker-entrypoint-initdb.d/
-
+RUN touch /docker-entrypoint-initdb.d/start-shiny.sh
+RUN echo "shiny-server" >> /docker-entrypoint-initdb.d/start-shiny.sh
+RUN chmod +x /docker-entrypoint-initdb.d/start-shiny.sh
 RUN apt-get update -y
 
 RUN apt-get -y install dirmngr --install-recommends
