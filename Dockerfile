@@ -1,6 +1,6 @@
 FROM mysql
 COPY survey-stack.sql /docker-entrypoint-initdb.d/
-COPY touch start-shiny.sh /start-shiny.sh
+COPY start-shiny.sh /start-shiny.sh
 
 RUN apt-get update
 
