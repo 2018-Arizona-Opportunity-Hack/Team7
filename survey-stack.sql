@@ -53,12 +53,12 @@ create procedure delete_survey(in in_id int)
   end
   //
 
-create procedure create_question(in in_text text, in in_type int, in in_r_type int, in in_s_id int)
+create procedure create_question(in in_text text, in in_type int, in in_s_id int)
   begin
     insert into question
-      (`text`, `type`, `r_type`, `s_id`)
+      (`text`, `type`, `s_id`)
         values
-      (in_text, in_type, in_r_type, in_s_id);
+      (in_text, in_type, in_s_id);
   end
   //
 
