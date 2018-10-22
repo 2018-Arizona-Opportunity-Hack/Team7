@@ -2,15 +2,13 @@ FROM mysql
 COPY survey-stack.sql /docker-entrypoint-initdb.d/
 RUN apt-get update -y
 
-RUN apt-get -y install dirmngr --install-recommends
-RUN apt-get -y install software-properties-common
-RUN apt-get -y install apt-transport-https
+RUN apt-get -y install dirmngr --install-recommends software-properties-common apt-transport-https
 
 RUN apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
 RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/debian stretch-cran35/'
 RUN apt-get update -y
 
-RUN apt-get -y install r-base gdebi-core curl
+RUN apt-get -y install r-base gdebi-core curl libxml2-dev libgdal20 libgdal-dev
 
 RUN su - -c "R -e \"install.packages('shiny', repos = 'http://cran.rstudio.com/')\""
 RUN su - -c "R -e \"install.packages('shinydashboard', repos='http://cran.rstudio.com/')\""
@@ -26,9 +24,3 @@ RUN dpkg -i shiny-server-1.5.9.923-amd64.deb
 
 RUN rm -rf /srv/shiny-server/*
 COPY app.r /srv/shiny-server/app.r
-COPY mock.csv /srv/shiny-server/mock.csv
-RUN rm /etc/shiny-server/shiny-server.conf
-COPY shiny-server.conf /etc/shiny-server/shiny-server.conf
-
-RUN service shiny-server restart
-RUN service shiny-server enable
