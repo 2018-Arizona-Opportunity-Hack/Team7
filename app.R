@@ -11,8 +11,8 @@ library(stringi)
 #global variables
 answersListID <<- NULL
 previewString <<- ""
-lastString <<- NULL
 totalQuestionsAdded <<- 0
+questionLengths <<- NULL
 
 #UI
 header <- dashboardHeader(title = "Survey Manager")
@@ -145,7 +145,7 @@ server <- function(input, output) {
   values <- reactiveValues(num_questions = 0)
   
   
-  
+  #Generate survey
   observeEvent(input$generate, ignoreNULL = FALSE, {
     
     ##Create list of all Rmd files from the questions directory
@@ -290,11 +290,12 @@ server <- function(input, output) {
       }
     }
     
-    #Add the new question HTML to lastString to be used if the question is deleted
-    lastString <<- append(lastString, paste0(addString, "</ul>"))
+    #Add the length of the question HTML to questionLengths to be used if the question is deleted
+    questionLengths <<- append(questionLengths, nchar(paste0(addString, "</ul>")))
     
     #Add new question to the preview
     previewString <<- paste0(previewString, addString, "</ul>")
+    
     #Render the new preview
     output$surveyPreview <- renderUI({HTML(previewString)})
   
@@ -318,15 +319,16 @@ server <- function(input, output) {
     totalQuestionsAdded <<- totalQuestionsAdded - 1
     
     #Delete last question from the preview
-    previewString <<- gsub(lastString[length(lastString)],"",previewString)
+    previewString <<- substr(previewString, 1, nchar(previewString) - questionLengths[length(questionLengths)]) 
     
-    #Remove last question HTML from lastString
-    #If removing the only question, set lastString equal to ""
-    if(length(lastString) != 1){
-      lastString <<- lastString[1:length(lastString)-1]
+    #Remove the question length from questionLengths
+    #If not deleting the only question 
+    if(length(questionLengths) > 1 ){
+      questionLengths <<- questionLengths[1:(length(questionLengths)-1)]
     }
-    else{
-      lastString <<- ""
+    #If deleting the only question
+    else if (length(questionLengths) == 1 ){
+      questionLengths <<- NULL
     }
     
     #Render the new preview
@@ -335,6 +337,7 @@ server <- function(input, output) {
   
   
   
+  #Read in input
   observeEvent(input$file_in, {
     #Read intput file
     infile = input$file_in
