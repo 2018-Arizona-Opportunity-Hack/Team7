@@ -60,7 +60,6 @@ body <- dashboardBody(
                        div(id = "questions",
                            style = "border: 1px solid silver;")
                        
-                       #uiOutput("inputs")                         
                      ),
                      
                      box(
@@ -124,10 +123,13 @@ ui <- dashboardPage(
 
 server <- function(input, output) {
   
+  #Generate unique number based upon system time
+  seed = as.numeric(Sys.time())
+  
   #Create directory for the questions
-  dir.create(file.path(getwd(), "/survey"), showWarnings = FALSE)
+  dir.create(file.path(getwd(), paste0("/survey",seed)), showWarnings = FALSE)
   #Set it as the working directory
-  setwd(file.path(getwd(), "/survey"))
+  setwd(file.path(getwd(),  paste0("/survey",seed)))
   #Clear the directory
   do.call(file.remove, list(list.files(getwd(), full.names = TRUE)))
   
@@ -135,15 +137,14 @@ server <- function(input, output) {
   setwd("..")
   
   #Create directory for the questions
-  dir.create(file.path(getwd(), "/questions"), showWarnings = FALSE)
+  dir.create(file.path(getwd(), paste0("/questions",seed)), showWarnings = FALSE)
   #Set it as the working directory
-  setwd(file.path(getwd(), "/questions"))
+  setwd(file.path(getwd(), paste0("/questions",seed)))
   #Clear the directory
   do.call(file.remove, list(list.files(getwd(), full.names = TRUE)))
   
   #Keep track of the number of questions
   values <- reactiveValues(num_questions = 0)
-  
   
   #Generate survey
   observeEvent(input$generate, ignoreNULL = FALSE, {
@@ -167,7 +168,7 @@ server <- function(input, output) {
     
     #If questions were added create the survey
     if(!is.null(survey)){
-      exams2nops(survey, n = 1, dir = "../survey", name = "survey", date = Sys.Date(),
+      exams2nops(survey, n = 1, dir = paste0("../survey",seed), name = "survey", date = Sys.Date(),
                  blank = 0, duplex = FALSE)
     }
     
