@@ -1,6 +1,5 @@
 FROM debian
 
-COPY survey-stack.sql /survey-stack.sql
 COPY rpubkey.asc /rpubkey.asc
 
 ENV DEBIAN_FRONTEND="noninteractive"
