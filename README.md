@@ -20,14 +20,17 @@ While digital data collection permeates every aspect of modern life, many organi
 The ability to collect written responses doesn't necessarily empower the organization in the same way that quantitative data can. Typically, advanced analysis must be performed on the short responses and then categorized and notated by a human. Survey Stack empowers organizations by providing a way to perform sentiment analysis on participants responses to categorize.
 
 ### Installation
-
+Installation on debian-based distributions is currently as easy as running the following command:
+```
+bash install_survey.sh
+```
+On other distributions, simply install docker and git, clone the repository, then use install_survey.sh as a guide to build the docker image.
 
 ### Usage
 Survey Stack allows you to create a form that can then be printed, distributed, completed and recollected. The documents can then be scanned and uploaded to Survey Stack. Survey Stack can then ingest the quantitative and qualitative responses and empower the organization with advanced analysis
 
 ### Requirements
-Docker Host
-SQL Server Instance
+Host capable of running Docker.
 
 ### Credits
 Creators: Tom Gleason, Tom Fowler, Josh Lee, Christian Taillon

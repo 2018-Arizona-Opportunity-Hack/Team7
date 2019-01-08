@@ -1,1 +1,1 @@
-docker run -e MYSQL_ROOT_PASSWORD=`openssl rand -base64 32` -p 80:3838 -d survey-stack
+sudo docker run -p 80:3838 -d survey_stack
