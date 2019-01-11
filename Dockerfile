@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND="noninteractive"
 
 RUN apt-get update
 
-RUN apt-get install -y gnupg2 software-properties-common apt-transport-https curl libxml2-dev libgdal-dev texinfo
+RUN apt-get install -y gnupg2 software-properties-common apt-transport-https curl libxml2-dev libgdal-dev texinfo nodejs-common
 
 RUN apt-key add /rpubkey.asc &&\
     add-apt-repository 'deb https://cloud.r-project.org/bin/linux/debian stretch-cran35/' &&\
@@ -20,6 +20,12 @@ RUN curl -o shiny-server-1.5.9.923-amd64.deb https://download3.rstudio.org/ubunt
 
 COPY shiny-server.conf /etc/shiny-server/shiny-server.conf
 COPY app.R /srv/shiny-server/app.r
+
+RUN mkdir /auth-proxy
+COPY auth-proxy/package.json /auth-proxy/package.json
+COPY auth-proxy/index.js /auth-proxy/index.js
+COPY auth-proxy/static/index.html /auth-proxy/static/index.html
+COPY auth-proxy/static/index.js
 
 COPY entrypoint.sh /entrypoint.sh
 

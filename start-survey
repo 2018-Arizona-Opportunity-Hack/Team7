@@ -1,1 +1,12 @@
-sudo docker run -p 80:3838 -d survey_stack
+#!/bin/bash
+read -s "Please choose a username: " un
+read -s -p "Choose a password: " pw
+echo
+read -s -p "Confirm your password: " pwconf
+
+if [ $pw != $pwconf ]; then
+  echo "Passwords did not math, try again."
+  exit 1
+fi
+
+sudo docker run -e USERNAME=$un -e PASSWORD=$pw  -p 80:8080 -d survey_stack
