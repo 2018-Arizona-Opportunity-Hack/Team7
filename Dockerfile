@@ -6,7 +6,11 @@ ENV DEBIAN_FRONTEND="noninteractive"
 
 RUN apt-get update
 
-RUN apt-get install -y gnupg2 software-properties-common apt-transport-https curl libxml2-dev libgdal-dev texinfo nodejs-common
+RUN apt-get install -y gnupg2 software-properties-common apt-transport-https curl libxml2-dev libgdal-dev texinfo
+
+RUN curl -sL https://deb.nodesource.com/setup_11.x | bash -
+
+RUN apt-get install -y nodejs
 
 RUN apt-key add /rpubkey.asc &&\
     add-apt-repository 'deb https://cloud.r-project.org/bin/linux/debian stretch-cran35/' &&\
@@ -25,7 +29,10 @@ RUN mkdir /auth-proxy
 COPY auth-proxy/package.json /auth-proxy/package.json
 COPY auth-proxy/index.js /auth-proxy/index.js
 COPY auth-proxy/static/index.html /auth-proxy/static/index.html
-COPY auth-proxy/static/index.js
+COPY auth-proxy/static/index.js auth-proxy/static/index.js
+COPY auth-proxy/static/index.css auth-proxy/static/index.css
+
+RUN cd /auth-proxy && npm install
 
 COPY entrypoint.sh /entrypoint.sh
 

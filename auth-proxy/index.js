@@ -31,7 +31,7 @@ app.use('/', function(req, res, next) {
 	    res.redirect('/');
 	} else if (reqPath === '/auth/authenticate' && req.method === 'POST') {
 	    if (req.body && req.body.un && req.body.pw) {
-		if (req.body.un === 'test' && req.body.pw === 'admin') {
+		if (req.body.un.toLowerCase() === process.env['USERNAME'].toLowerCase() && req.body.pw === process.env['PASSWORD']) {
 		    req.session = {
 			sessid: uuidv4()
 		    };
@@ -63,7 +63,7 @@ app.use('/', function(req, res, next) {
     }
 });
 
-app.use('/', proxy('localhost:80', {
+app.use('/', proxy('localhost:3838', {
     filter: function (req, res) {
 	const reqPath = req.originalUrl.split('?')[0];
 	    

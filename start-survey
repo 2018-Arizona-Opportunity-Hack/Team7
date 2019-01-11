@@ -1,12 +1,15 @@
 #!/bin/bash
-read -s "Please choose a username: " un
-read -s -p "Choose a password: " pw
+read -p "Choose a username: " UN
+read -s -p "Choose a password: " PW
 echo
-read -s -p "Confirm your password: " pwconf
+read -s -p "Confirm your password: " PWCONF
 
-if [ $pw != $pwconf ]; then
-  echo "Passwords did not math, try again."
+if [ $PW != $PWCONF ]; then
+  echo "Passwords did not match, try again."
   exit 1
 fi
 
-sudo docker run -e USERNAME=$un -e PASSWORD=$pw  -p 80:8080 -d survey_stack
+echo
+
+sudo docker run -e USERNAME=$UN -e PASSWORD=$PW  -p 80:8080 -d survey_stack
+
