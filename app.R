@@ -7,12 +7,13 @@ library(RSAGA)
 library(pathological)
 library(exams)
 library(stringi)
+library(DT)
 
 #global variables
 answersListID <<- NULL
 previewString <<- ""
+lastString <<- NULL
 totalQuestionsAdded <<- 0
-questionLengths <<- NULL
 
 #UI
 header <- dashboardHeader(title = "Survey Manager")
@@ -32,14 +33,19 @@ body <- dashboardBody(
               column(width = 4,
                      box(
                        width = NULL,
+                       textInput("surveynameinput", 
+                                     label="What is your survey called?:",
+                                     value = "",
+                                     width = NULL,
+                                     placeholder = "Survey")
+                     ),
+                     box(
+                       width = NULL,
                        textAreaInput("qinput", 
                                      label="Enter your question below:",
                                      value = "",
                                      width = NULL,
-                                     placeholder = NULL)
-                     ),
-                     box(
-                       width = NULL,
+                                     placeholder = NULL),
                        radioButtons("qtype","Question Type:",
                                     c("Multiple Choice","Short Answer"),
                                     selected="Multiple Choice")
@@ -50,7 +56,7 @@ body <- dashboardBody(
                        box(
                          width = NULL,
                          solidHeader = TRUE,
-                         h5(align = "center","Add or Take Away Questions:")
+                         h5(align = "center","Add or Take Away Answers:")
                        ),
                        
                        actionButton("addAnswer", "+"),
@@ -60,11 +66,12 @@ body <- dashboardBody(
                        div(id = "questions",
                            style = "border: 1px solid silver;")
                        
+                       #uiOutput("inputs")                         
                      ),
                      
                      box(
                        width = NULL,
-                       actionButton("addq","Add Question")
+                       actionButton("addq","Add Answer")
                      ),
                      
                      box(
@@ -78,7 +85,6 @@ body <- dashboardBody(
                      )
                      
               ),
-              
               column(width = 8,
                      box(
                        width = NULL,
@@ -94,7 +100,7 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       solidHeader = TRUE,
+                       solidHeader = T,
                        fileInput("file_in", "Input Data", accept = c(".pdf",".rnw"))
                      )
               )
@@ -102,11 +108,40 @@ body <- dashboardBody(
     ),
     tabItem(tabName = "analysis",
             fluidRow(
-              column(width = 12,
+              tags$head(tags$style(".leftAlign{float:left;}")),
+              column(
+                width = 6, align = 'center',
                      box(
+                       title = paste("Upload CSV Report"),
                        width = NULL,
-                       solidHeader = TRUE,
-                       fileInput("data_in", "Import CSV", accept = c(".csv"))
+                       solidHeader = F,
+                       fileInput("csv_in", label=NULL, accept = c(".csv"))
+                     ),
+                     box(
+                       title = paste("Summary Statistics"),
+                       width = NULL,
+                       solidHeader = F,
+                       tableOutput("sumStatsTable")
+                     ),
+                     box(
+                       title = paste("Question Table"),
+                       width = NULL,
+                       solidHeader = F,
+                       dataTableOutput("questionTable")
+                     )
+              ),
+              column(
+                width = 6, align = 'center',
+                     selectInput(
+                       inputId = "questions",
+                       label = "Questions",
+                       choices = c("test","test1")
+                     ),
+                     box(
+                       title = "Pie Chart",
+                       width = NULL,
+                       solidHeader = F,
+                       plotOutput("pieChart")
                      )
               )
             )
@@ -121,15 +156,60 @@ ui <- dashboardPage(
   body
 )
 
+# Global function
+getSummaryStats <- function(data){
+  # Extract the summary statistics from the data
+  totalPeople <- length(unique(data$userID))
+  totalQuestions <- length(unique(data$questionID))
+  completedQuestions <- sum(complete.cases(data))
+  incompleteQuestions <- (totalQuestions * totalPeople) - completedQuestions
+
+  goodPeople <- 0
+  for(i in 1:totalPeople){
+    if(sum(table(data[,c("userID","questionID")])[i,]) == totalQuestions)
+      goodPeople <- goodPeople + 1
+  }
+
+  badPeople <- totalPeople - goodPeople
+  
+  # Question with lowest variance
+  # Question with greatest variance
+  
+  names <- c(
+    "Total Participants",
+    "Total Questions on Survey",
+    "Total Answered Questions",
+    "Total Unanswered Questions",
+    "Total Participants who answered every question",
+    "Total Participants who did not answer every question"
+  )
+  
+  values <- c(
+    paste0(prettyNum(totalPeople, big.mark = ",", scientific=FALSE)),
+    paste0(prettyNum(totalQuestions, big.mark = ",", scientific=FALSE)),
+    paste0(prettyNum(completedQuestions, big.mark = ",", scientific=FALSE)),
+    paste0(prettyNum(incompleteQuestions, big.mark = ",", scientific=FALSE)),
+    paste0(prettyNum(goodPeople, big.mark = ",", scientific=FALSE)),
+    paste0(prettyNum(badPeople, big.mark = ",", scientific=FALSE))
+  )
+  
+  sumStats = data.frame(names = names, values = values)
+  colnames(sumStats) = NULL
+  return(sumStats)
+}
+
+# Global function
+convertSCtoC <- function(csv){
+  data <- read.csv("/Users/Tommy/Desktop/nops_eval_sc.csv",header=F)
+  test <- as.numeric(gsub(",", ".", gsub("\\.", "", data)))
+}
+
 server <- function(input, output) {
   
-  #Generate unique number based upon system time
-  seed = as.numeric(Sys.time())
-  
   #Create directory for the questions
-  dir.create(file.path(getwd(), paste0("/survey",seed)), showWarnings = FALSE)
+  dir.create(file.path(getwd(), "/survey"), showWarnings = FALSE)
   #Set it as the working directory
-  setwd(file.path(getwd(),  paste0("/survey",seed)))
+  setwd(file.path(getwd(), "/survey"))
   #Clear the directory
   do.call(file.remove, list(list.files(getwd(), full.names = TRUE)))
   
@@ -137,16 +217,16 @@ server <- function(input, output) {
   setwd("..")
   
   #Create directory for the questions
-  dir.create(file.path(getwd(), paste0("/questions",seed)), showWarnings = FALSE)
+  dir.create(file.path(getwd(), "/questions"), showWarnings = FALSE)
   #Set it as the working directory
-  setwd(file.path(getwd(), paste0("/questions",seed)))
+  setwd(file.path(getwd(), "/questions"))
   #Clear the directory
   do.call(file.remove, list(list.files(getwd(), full.names = TRUE)))
   
   #Keep track of the number of questions
   values <- reactiveValues(num_questions = 0)
   
-  #Generate survey
+  #Generate the PDFs
   observeEvent(input$generate, ignoreNULL = FALSE, {
     
     ##Create list of all Rmd files from the questions directory
@@ -168,14 +248,16 @@ server <- function(input, output) {
     
     #If questions were added create the survey
     if(!is.null(survey)){
-      exams2nops(survey, n = 1, dir = paste0("../survey",seed), name = "survey", date = Sys.Date(),
-                 blank = 0, duplex = FALSE)
+      exams2nops(survey, n = 1, dir = "../survey", name = "survey", date = Sys.Date(),
+                 blank = 0, institution = input$surveynameinput, duplex = FALSE)
     }
     
+    # Next step: nops_scan
+    
+    # Next step: nops_eval
+    
   })
-  
-  
-  
+
   #Add an answer
   observeEvent(input$addAnswer, ignoreNULL = FALSE, {
     values$num_questions <- values$num_questions + 1
@@ -193,8 +275,6 @@ server <- function(input, output) {
     answersListID <<- append(answersListID,paste("Who",num, sep = ""))
   })
   
-  
-  
   #Remove an answer
   observeEvent(input$deleteAnswer, {
     num <- values$num_questions
@@ -205,8 +285,6 @@ server <- function(input, output) {
     removeUI(selector = paste0("#question", num))
     values$num_questions <- values$num_questions - 1
   })
-  
-  
   
   #Create the Rmd file for the question being added and add it to the preview
   observeEvent(input$addq, {
@@ -291,18 +369,15 @@ server <- function(input, output) {
       }
     }
     
-    #Add the length of the question HTML to questionLengths to be used if the question is deleted
-    questionLengths <<- append(questionLengths, nchar(paste0(addString, "</ul>")))
+    #Add the new question HTML to lastString to be used if the question is deleted
+    lastString <<- append(lastString, paste0(addString, "</ul>"))
     
     #Add new question to the preview
     previewString <<- paste0(previewString, addString, "</ul>")
-    
     #Render the new preview
     output$surveyPreview <- renderUI({HTML(previewString)})
   
   })
-  
-  
   
   #Remove the Rmd file for the question being removed and delete it from the preview
   observeEvent(input$removeq, {
@@ -320,27 +395,24 @@ server <- function(input, output) {
     totalQuestionsAdded <<- totalQuestionsAdded - 1
     
     #Delete last question from the preview
-    previewString <<- substr(previewString, 1, nchar(previewString) - questionLengths[length(questionLengths)]) 
+    previewString <<- gsub(lastString[length(lastString)],"",previewString)
     
-    #Remove the question length from questionLengths
-    #If not deleting the only question 
-    if(length(questionLengths) > 1 ){
-      questionLengths <<- questionLengths[1:(length(questionLengths)-1)]
+    #Remove last question HTML from lastString
+    #If removing the only question, set lastString equal to ""
+    if(length(lastString) != 1){
+      lastString <<- lastString[1:length(lastString)-1]
     }
-    #If deleting the only question
-    else if (length(questionLengths) == 1 ){
-      questionLengths <<- NULL
+    else{
+      lastString <<- ""
     }
     
     #Render the new preview
     output$surveyPreview <- renderUI({HTML(previewString)})
   })
   
-  
-  
-  #Read in input
+  #Handle the PDF/PNG input
   observeEvent(input$file_in, {
-    #Read intput file
+    #Read input file
     infile = input$file_in
     
     #If no file was uploaded, return
@@ -359,6 +431,52 @@ server <- function(input, output) {
       
       #writeLines(infile)
     }
+  })
+  
+  csv_file <- reactive({
+    # User has not uploaded a file yet
+    if (is.null(input$csv_in))
+      return(NULL)
+    read.csv(input$csv_in$datapath)
+  })
+  
+  output$sumStatsTable = renderTable({
+    if (is.null(csv_file()))
+      return(NULL)
+    getSummaryStats(csv_file())
+  })
+  
+  output$questionTable = renderDataTable({
+    if (is.null(csv_file()))
+      return(NULL)
+    # Prepare question table and make it global
+    data <- as.data.frame.matrix(table(csv_file()[,c("question_text","response")]))
+    data <- data.frame(question = row.names(data), data)
+    rownames(data) <- c()
+    questionTableData <<- data
+    
+    # Render the datatable
+    datatable(questionTableData,selection='single')
+  })
+  
+  questionSelected <- reactive({
+    if (is.null(input$questionTable_rows_selected))
+      return(NULL)
+    questionTableData[input$questionTable_rows_selected,]
+  })
+  
+  output$pieChart <- renderPlot({
+    if (is.null(input$questionTable_rows_selected))
+      return(NULL)
+
+    question_text <- as.character(questionSelected()[,1])
+    responses <- c(names(questionSelected())[-1])
+    response_vals <- unlist(unname(questionSelected()[1,][-1]))
+    
+    pie(x=response_vals,
+        labels=responses,
+        main=question_text,
+        col = rainbow(length(response_vals)))
   })
 }
 
