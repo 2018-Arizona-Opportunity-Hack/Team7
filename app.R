@@ -12,8 +12,10 @@ library(DT)
 #global variables
 answersListID <<- NULL
 previewString <<- ""
-lastString <<- NULL
 totalQuestionsAdded <<- 0
+shortAnswerQuestionsAdded <<- 0
+shortAnswerQuestionsNums <<- NULL
+questionLengths <<- NULL
 
 #UI
 header <- dashboardHeader(title = "Survey Manager")
@@ -33,7 +35,7 @@ body <- dashboardBody(
               column(width = 4,
                      box(
                        width = NULL,
-                       textInput("surveynameinput", 
+                       textAreaInput("surveynameinput", 
                                      label="What is your survey called?:",
                                      value = "",
                                      width = NULL,
@@ -45,7 +47,10 @@ body <- dashboardBody(
                                      label="Enter your question below:",
                                      value = "",
                                      width = NULL,
-                                     placeholder = NULL),
+                                     placeholder = NULL)
+                     ),
+                     box(
+                       width = NULL,
                        radioButtons("qtype","Question Type:",
                                     c("Multiple Choice","Short Answer"),
                                     selected="Multiple Choice")
@@ -66,12 +71,11 @@ body <- dashboardBody(
                        div(id = "questions",
                            style = "border: 1px solid silver;")
                        
-                       #uiOutput("inputs")                         
                      ),
                      
                      box(
                        width = NULL,
-                       actionButton("addq","Add Answer")
+                       actionButton("addq","Add Question")
                      ),
                      
                      box(
@@ -85,6 +89,7 @@ body <- dashboardBody(
                      )
                      
               ),
+              
               column(width = 8,
                      box(
                        width = NULL,
@@ -100,7 +105,7 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       solidHeader = T,
+                       solidHeader = TRUE,
                        fileInput("file_in", "Input Data", accept = c(".pdf",".rnw"))
                      )
               )
@@ -111,38 +116,38 @@ body <- dashboardBody(
               tags$head(tags$style(".leftAlign{float:left;}")),
               column(
                 width = 6, align = 'center',
-                     box(
-                       title = paste("Upload CSV Report"),
-                       width = NULL,
-                       solidHeader = F,
-                       fileInput("csv_in", label=NULL, accept = c(".csv"))
-                     ),
-                     box(
-                       title = paste("Summary Statistics"),
-                       width = NULL,
-                       solidHeader = F,
-                       tableOutput("sumStatsTable")
-                     ),
-                     box(
-                       title = paste("Question Table"),
-                       width = NULL,
-                       solidHeader = F,
-                       dataTableOutput("questionTable")
-                     )
+                box(
+                  title = paste("Upload CSV Report"),
+                  width = NULL,
+                  solidHeader = F,
+                  fileInput("csv_in", label=NULL, accept = c(".csv"))
+                ),
+                box(
+                  title = paste("Summary Statistics"),
+                  width = NULL,
+                  solidHeader = F,
+                  tableOutput("sumStatsTable")
+                ),
+                box(
+                  title = paste("Question Table"),
+                  width = NULL,
+                  solidHeader = F,
+                  dataTableOutput("questionTable")
+                )
               ),
               column(
                 width = 6, align = 'center',
-                     selectInput(
-                       inputId = "questions",
-                       label = "Questions",
-                       choices = c("test","test1")
-                     ),
-                     box(
-                       title = "Pie Chart",
-                       width = NULL,
-                       solidHeader = F,
-                       plotOutput("pieChart")
-                     )
+                selectInput(
+                  inputId = "questions",
+                  label = "Questions",
+                  choices = c("test","test1")
+                ),
+                box(
+                  title = "Pie Chart",
+                  width = NULL,
+                  solidHeader = F,
+                  plotOutput("pieChart")
+                )
               )
             )
     )
@@ -163,13 +168,13 @@ getSummaryStats <- function(data){
   totalQuestions <- length(unique(data$questionID))
   completedQuestions <- sum(complete.cases(data))
   incompleteQuestions <- (totalQuestions * totalPeople) - completedQuestions
-
+  
   goodPeople <- 0
   for(i in 1:totalPeople){
     if(sum(table(data[,c("userID","questionID")])[i,]) == totalQuestions)
       goodPeople <- goodPeople + 1
   }
-
+  
   badPeople <- totalPeople - goodPeople
   
   # Question with lowest variance
@@ -206,10 +211,13 @@ convertSCtoC <- function(csv){
 
 server <- function(input, output) {
   
+  #Generate unique number based upon system time
+  seed = as.numeric(Sys.time())
+  
   #Create directory for the questions
-  dir.create(file.path(getwd(), "/survey"), showWarnings = FALSE)
+  dir.create(file.path(getwd(), paste0("/survey",seed)), showWarnings = FALSE)
   #Set it as the working directory
-  setwd(file.path(getwd(), "/survey"))
+  setwd(file.path(getwd(),  paste0("/survey",seed)))
   #Clear the directory
   do.call(file.remove, list(list.files(getwd(), full.names = TRUE)))
   
@@ -217,16 +225,16 @@ server <- function(input, output) {
   setwd("..")
   
   #Create directory for the questions
-  dir.create(file.path(getwd(), "/questions"), showWarnings = FALSE)
+  dir.create(file.path(getwd(), paste0("/questions",seed)), showWarnings = FALSE)
   #Set it as the working directory
-  setwd(file.path(getwd(), "/questions"))
+  setwd(file.path(getwd(), paste0("/questions",seed)))
   #Clear the directory
   do.call(file.remove, list(list.files(getwd(), full.names = TRUE)))
   
   #Keep track of the number of questions
   values <- reactiveValues(num_questions = 0)
   
-  #Generate the PDFs
+  #Generate survey
   observeEvent(input$generate, ignoreNULL = FALSE, {
     
     ##Create list of all Rmd files from the questions directory
@@ -248,18 +256,29 @@ server <- function(input, output) {
     
     #If questions were added create the survey
     if(!is.null(survey)){
-      exams2nops(survey, n = 1, dir = "../survey", name = "survey", date = Sys.Date(),
+      exams2nops(survey, n = 1, dir = paste0("../survey",seed), name = "survey", date = Sys.Date(),
                  blank = 0, institution = input$surveynameinput, duplex = FALSE)
     }
     
-    # Next step: nops_scan
-    
-    # Next step: nops_eval
-    
   })
-
+  
+  # Next step: nops_scan
+  
+  # Next step: nops_eval
+  
+  
   #Add an answer
   observeEvent(input$addAnswer, ignoreNULL = FALSE, {
+    
+    #Test to see if 5 answers have already been added for a question
+    if(values$num_questions == 5){
+      showModal(modalDialog(
+        "You can only have a max of 5 answers per question."
+      ))
+      
+      return()
+    }
+    
     values$num_questions <- values$num_questions + 1
     num <- values$num_questions
     insertUI(
@@ -275,6 +294,8 @@ server <- function(input, output) {
     answersListID <<- append(answersListID,paste("Who",num, sep = ""))
   })
   
+  
+  
   #Remove an answer
   observeEvent(input$deleteAnswer, {
     num <- values$num_questions
@@ -286,8 +307,32 @@ server <- function(input, output) {
     values$num_questions <- values$num_questions - 1
   })
   
+  
+  
   #Create the Rmd file for the question being added and add it to the preview
   observeEvent(input$addq, {
+    
+    #Test to see if 45 questions have been added
+    if(totalQuestionsAdded == 45){
+      showModal(modalDialog(
+        "You can only have a max of 45 questions."
+      ))
+      
+      return()
+    }
+    
+    #Test to see if three short answer questions have already been added
+    else{
+      if(input$qtype == 'Short Answer' && shortAnswerQuestionsAdded < 3){
+        shortAnswerQuestionsAdded <<- shortAnswerQuestionsAdded + 1
+      }
+      else if (input$qtype == 'Short Answer'){
+          showModal(modalDialog(
+            "You can only have a max of 3 short answer questions."
+          ))
+          return()
+      }
+    }
 
     #question the user typed
     question <- input$qinput
@@ -303,6 +348,11 @@ server <- function(input, output) {
     #Produce the Rmd file
     #Increment the question total
     totalQuestionsAdded <<- totalQuestionsAdded + 1
+    
+    #If adding short answer question
+    if(input$qtype == 'Short Answer'){
+      shortAnswerQuestionsNums <<- append(shortAnswerQuestionsNums,totalQuestionsAdded)
+    }
     
     #Create unquie file name based on the question number so each question has its own file
     fileName = c(paste0("question",totalQuestionsAdded,".txt"))
@@ -369,15 +419,18 @@ server <- function(input, output) {
       }
     }
     
-    #Add the new question HTML to lastString to be used if the question is deleted
-    lastString <<- append(lastString, paste0(addString, "</ul>"))
+    #Add the length of the question HTML to questionLengths to be used if the question is deleted
+    questionLengths <<- append(questionLengths, nchar(paste0(addString, "</ul>")))
     
     #Add new question to the preview
     previewString <<- paste0(previewString, addString, "</ul>")
+    
     #Render the new preview
     output$surveyPreview <- renderUI({HTML(previewString)})
   
   })
+  
+  
   
   #Remove the Rmd file for the question being removed and delete it from the preview
   observeEvent(input$removeq, {
@@ -385,6 +438,12 @@ server <- function(input, output) {
     #If no questions have been added, return
     if(totalQuestionsAdded == 0){
       return(NULL)
+    }
+    
+    #If removing a short answer question
+    if(totalQuestionsAdded %in% shortAnswerQuestionsNums ){
+      shortAnswerQuestionsNums <<- setdiff(shortAnswerQuestionsNums,c(totalQuestionsAdded))
+      shortAnswerQuestionsAdded <<- shortAnswerQuestionsAdded - 1
     }
     
     #Get the file name based of the last question added
@@ -395,20 +454,23 @@ server <- function(input, output) {
     totalQuestionsAdded <<- totalQuestionsAdded - 1
     
     #Delete last question from the preview
-    previewString <<- gsub(lastString[length(lastString)],"",previewString)
+    previewString <<- substr(previewString, 1, nchar(previewString) - questionLengths[length(questionLengths)]) 
     
-    #Remove last question HTML from lastString
-    #If removing the only question, set lastString equal to ""
-    if(length(lastString) != 1){
-      lastString <<- lastString[1:length(lastString)-1]
+    #Remove the question length from questionLengths
+    #If not deleting the only question 
+    if(length(questionLengths) > 1 ){
+      questionLengths <<- questionLengths[1:(length(questionLengths)-1)]
     }
-    else{
-      lastString <<- ""
+    #If deleting the only question
+    else if (length(questionLengths) == 1 ){
+      questionLengths <<- NULL
     }
     
     #Render the new preview
     output$surveyPreview <- renderUI({HTML(previewString)})
   })
+  
+  
   
   #Handle the PDF/PNG input
   observeEvent(input$file_in, {
@@ -421,9 +483,18 @@ server <- function(input, output) {
     }
     else {
       print("LL")
-      #img <- dir(infile, pattern = "nops_scan",
-      # full.names = TRUE)
-      nops_scan(file = infile)
+
+      img <- dir(system.file("nops", package = "exams"), pattern = "nops_scan",
+                 full.names = TRUE)
+      
+      ## copy the PNG files to the working directory
+      file.copy(img, to = ".")
+      
+      ## read the scanned images (all locally available .png files) and collect
+      ## results in a ZIP archive (see ?nops_scan for more details)
+      nops_scan()
+      dir()
+      
       
       print("MM")
       #Read content
@@ -468,7 +539,7 @@ server <- function(input, output) {
   output$pieChart <- renderPlot({
     if (is.null(input$questionTable_rows_selected))
       return(NULL)
-
+    
     question_text <- as.character(questionSelected()[,1])
     responses <- c(names(questionSelected())[-1])
     response_vals <- unlist(unname(questionSelected()[1,][-1]))
@@ -478,6 +549,7 @@ server <- function(input, output) {
         main=question_text,
         col = rainbow(length(response_vals)))
   })
+  
 }
 
 shinyApp(ui = ui, server = server)
