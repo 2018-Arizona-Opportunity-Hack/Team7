@@ -18,7 +18,7 @@ RUN apt-key add /rpubkey.asc &&\
 
 RUN apt-get -y install r-base --allow-unauthenticated
 
-RUN su - -c "R -e \"install.packages(c('shiny', 'shinydashboard', 'exams', 'rlist', 'knitr', 'RSAGA', 'pathological', 'ECharts2Shiny', 'rmarkdown'), repos = 'http://cran.rstudio.com/')\""
+RUN su - -c "R -e \"install.packages(c('shiny', 'shinydashboard', 'exams', 'rlist', 'knitr', 'RSAGA', 'pathological', 'ECharts2Shiny', 'DT', 'rmarkdown'), repos = 'http://cran.rstudio.com/')\""
 
 RUN curl -o shiny-server-1.5.9.923-amd64.deb https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.9.923-amd64.deb && dpkg -i shiny-server-1.5.9.923-amd64.deb && rm -rf /srv/shiny-server/*
 
