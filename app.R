@@ -87,6 +87,11 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        actionButton("generate","Generate Survey")
+                     ),
+                     
+                     box(
+                       width = NULL,
+                       downloadButton("downloadSurvey", label = "Download")
                      )
                      
               ),
@@ -220,9 +225,18 @@ convertSCtoC <- function(csv){
 }
 
 server <- function(input, output) {
+
+  #Reset Global Vars
+  answersListID <<- NULL
+  previewString <<- ""
+  totalQuestionsAdded <<- 0
+  shortAnswerQuestionsAdded <<- 0
+  shortAnswerQuestionsNums <<- NULL
+  questionLengths <<- NULL
   
   #set working directory to the shiny server
   setwd("/srv/shiny-server")
+
   
   #Generate unique number based upon system time
   seed = as.numeric(Sys.time())
@@ -279,6 +293,18 @@ server <- function(input, output) {
     })
     
   })
+  
+  output$downloadSurvey <- downloadHandler(
+    filename <- function() {
+      paste("output", "zip", sep=".")
+    },
+    
+    content <- function(file) {
+      file.copy("out.zip", file)
+    },
+    contentType = "application/zip"
+  )
+  
   
   #Add an answer
   observeEvent(input$addAnswer, ignoreNULL = FALSE, {
