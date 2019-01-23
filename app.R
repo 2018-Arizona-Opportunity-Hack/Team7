@@ -6,8 +6,8 @@ library(knitr)
 library(RSAGA)
 library(pathological)
 library(exams)
-library(stringi)
 library(DT)
+library(pdftools)
 
 #global variables
 answersListID <<- NULL
@@ -24,7 +24,8 @@ sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Create Survey", tabName = "create", icon = icon("pencil",lib="glyphicon")),
     menuItem("Upload Survey", tabName = "upload", icon = icon("upload")),
-    menuItem("Analyze Results", tabName = "analysis", icon = icon("equalizer",lib="glyphicon"))
+    menuItem("Analyze Results", tabName = "analysis", icon = icon("equalizer",lib="glyphicon")),
+    menuItem("Logout", tabName = "logout", icon = icon("sign-out-alt",lib="font-awesome"))
   )
 )
 
@@ -106,7 +107,7 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        solidHeader = TRUE,
-                       fileInput("file_in", "Input Data", accept = c(".pdf",".rnw"))
+                       fileInput("pdfInput", "Upload ZIP file", accept = c(".zip"))
                      )
               )
             )
@@ -148,6 +149,15 @@ body <- dashboardBody(
                   solidHeader = F,
                   plotOutput("pieChart")
                 )
+              )
+            )
+    ),
+    tabItem(tabName = "logout",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       a("Click to Logout", href="/auth/logout", target="_blank")
+                        )
               )
             )
     )
@@ -211,6 +221,9 @@ convertSCtoC <- function(csv){
 
 server <- function(input, output) {
   
+  #set working directory to the shiny server
+  setwd("/srv/shiny-server")
+  
   #Generate unique number based upon system time
   seed = as.numeric(Sys.time())
   
@@ -237,6 +250,8 @@ server <- function(input, output) {
   #Generate survey
   observeEvent(input$generate, ignoreNULL = FALSE, {
     
+    withProgress(message = 'Generating Survey', {
+    
     ##Create list of all Rmd files from the questions directory
     list.filenames<-list.files(pattern = ".Rmd")
     
@@ -260,12 +275,10 @@ server <- function(input, output) {
                  blank = 0, institution = input$surveynameinput, duplex = FALSE)
     }
     
+    incProgress(0.1)
+    })
+    
   })
-  
-  # Next step: nops_scan
-  
-  # Next step: nops_eval
-  
   
   #Add an answer
   observeEvent(input$addAnswer, ignoreNULL = FALSE, {
@@ -473,34 +486,61 @@ server <- function(input, output) {
   
   
   #Handle the PDF/PNG input
-  observeEvent(input$file_in, {
+  observeEvent(input$pdfInput, {
     #Read input file
-    infile = input$file_in
+    infile = input$pdfInput
     
     #If no file was uploaded, return
     if (is.null(infile)){
       return(NULL)
     }
     else {
-      print("LL")
+      
+      withProgress(message = 'Analyzing Survey Results and Producing csv File', {
+      
+      #Unzip the file
+      unzip(infile$datapath, exdir = paste0("../unzippedPDFS", seed))
+      
+      #filepath to the unzipped pdfs
+      fp <- paste0("/unzippedPDFS", seed)
+      
+      #Set it as the working directory
+      setwd(file.path(getwd(),".."))
+      setwd(file.path(getwd(), fp))
+      
+      #Read in all of the pdfs
+      files <- list.files(path=getwd(), pattern="*.pdf", full.names=TRUE, recursive=FALSE)
 
-      img <- dir(system.file("nops", package = "exams"), pattern = "nops_scan",
-                 full.names = TRUE)
+      #Convert all the pdfs into pngs
+      for(file in files){
+        pdf_convert(file, format = "png", pages = NULL, filenames = NULL, dpi = 300, opw = "", upw = "", verbose = TRUE)
+        
+      }
       
-      ## copy the PNG files to the working directory
-      file.copy(img, to = ".")
+      ##Pass the png files into nops_scan
+      files <- list.files(path=getwd(), pattern="*.png", full.names=TRUE, recursive=FALSE)
       
-      ## read the scanned images (all locally available .png files) and collect
-      ## results in a ZIP archive (see ?nops_scan for more details)
-      nops_scan()
-      dir()
+      nops_scan(files)
       
+      #create the csv file of student data in the wd
+      write.table(data.frame(
+        registration = c("0000000"),
+        name = c("Jane Doe"),
+        id = c("jane_doe")
+      ), file = "studentData.csv", sep = ";", quote = FALSE, row.names = FALSE)
+      
+      #call nops_eval() to evaluate the surveys
+      nops_eval()
       
       print("MM")
-      #Read content
-      #res <- nops_scan(infile)
       
-      #writeLines(infile)
+      #edit csv file
+      
+      #download csv file
+      ###file.copy("surveyData.csv", "nops_eval.csv") #Does not work
+      
+      incProgress(0.1)
+      })
     }
   })
   
