@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND="noninteractive"
 
 RUN apt-get update
 
-RUN apt-get install -y gnupg2 software-properties-common apt-transport-https curl libxml2-dev libgdal-dev texinfo texlive
+RUN apt-get install -y gnupg2 software-properties-common apt-transport-https curl libxml2-dev libgdal-dev texinfo texlive libpoppler-cpp-dev pandoc
 
 RUN curl -sL https://deb.nodesource.com/setup_11.x | bash -
 
@@ -27,8 +27,8 @@ RUN su - -c "R -e \"install.packages('RSAGA', repos = 'http://cran.rstudio.com/'
 RUN su - -c "R -e \"install.packages('pathological', repos = 'http://cran.rstudio.com/')\""
 RUN su - -c "R -e \"install.packages('ECharts2Shiny', repos = 'http://cran.rstudio.com/')\""
 RUN su - -c "R -e \"install.packages('DT', repos = 'http://cran.rstudio.com/')\""
-RUN su - -c "R -e \"install.packages('DT', repos = 'http://cran.rstudio.com/')\""
 RUN su - -c "R -e \"install.packages('pdftools', repos = 'http://cran.rstudio.com/')\""
+RUN su - -c "R -e \"install.packages('rmarkdown', repos = 'http://cran.rstudio.com/')\""
 
 RUN curl -o shiny-server-1.5.9.923-amd64.deb https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.9.923-amd64.deb && dpkg -i shiny-server-1.5.9.923-amd64.deb && rm -rf /srv/shiny-server/*
 
