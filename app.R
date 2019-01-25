@@ -8,6 +8,7 @@ library(pathological)
 library(exams)
 library(DT)
 library(pdftools)
+library(utils)
 
 #global variables
 answersListID <<- NULL
@@ -91,9 +92,8 @@ body <- dashboardBody(
                      
                      box(
                        width = NULL,
-                       downloadButton("downloadSurvey", label = "Download")
+                       downloadButton("downloadSurvey", label = "Download Survey")
                      )
-                     
               ),
               
               column(width = 8,
@@ -113,6 +113,10 @@ body <- dashboardBody(
                        width = NULL,
                        solidHeader = TRUE,
                        fileInput("pdfInput", "Upload ZIP file", accept = c(".zip"))
+                     ),                      
+                     box(
+                       width = NULL,
+                       downloadButton("downloadResults", label = "Download Results")
                      )
               )
             )
@@ -235,8 +239,8 @@ server <- function(input, output) {
   questionLengths <<- NULL
   
   #set working directory to the shiny server
-  setwd("/srv/shiny-server")
-
+  #setwd("/srv/shiny-server")
+  setwd("C:/Users/scrol_000/Documents/Hackathon 2018/December")
   
   #Generate unique number based upon system time
   seed = as.numeric(Sys.time())
@@ -294,17 +298,47 @@ server <- function(input, output) {
     
   })
   
+  #Download survey
   output$downloadSurvey <- downloadHandler(
     filename <- function() {
-      paste("output", "zip", sep=".")
+      #setwd(paste0("../survey",seed))
+      
+      files2zip <- dir(paste0("../survey",seed), full.names = TRUE)
+      zip(zipfile = 'surveyZip', files = files2zip)
+      
+      #paste0("survey1", ".pdf")
+      paste0("surveyZip", ".zip")
     },
     
     content <- function(file) {
-      file.copy("out.zip", file)
+      print(file)
+      #file.copy("survey1.pdf", file)
+      file.copy("surveyZip.zip", file)
+      #setwd("..")
+
     },
+    #contentType = "application/pdf"
     contentType = "application/zip"
   )
   
+  #Download the survey results csv
+  output$downloadResults <- downloadHandler(
+    filename <- function() {
+      print(getwd())
+      print(paste0("unzippedPDFS", seed))
+      setwd(paste0("unzippedPDFS", seed))
+      print("L")
+      paste0("results", ".csv")
+    },
+    
+    content <- function(file) {
+      print(file)
+      file.copy("results.csv", file)
+      setwd("..")
+      
+    },
+    contentType = "application/csv"
+  )
   
   #Add an answer
   observeEvent(input$addAnswer, ignoreNULL = FALSE, {
@@ -558,12 +592,13 @@ server <- function(input, output) {
       #call nops_eval() to evaluate the surveys
       nops_eval()
       
-      print("MM")
+      #rename the results csv file
+      setwd(paste0("../unzippedPDFS", seed))
+      file.rename("nops_eval.csv", "results.csv")
+      setwd("..")
       
       #edit csv file
       
-      #download csv file
-      ###file.copy("surveyData.csv", "nops_eval.csv") #Does not work
       
       incProgress(0.1)
       })
