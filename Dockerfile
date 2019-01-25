@@ -6,9 +6,11 @@ ENV DEBIAN_FRONTEND="noninteractive"
 
 RUN apt-get update
 
-RUN apt-get install -y gnupg2 software-properties-common apt-transport-https curl libxml2-dev libgdal-dev texinfo texlive libpoppler-cpp-dev pandoc
+RUN apt-get install -y gnupg2 software-properties-common apt-transport-https curl libxml2-dev libgdal-dev texinfo texlive libpoppler-cpp-dev pandoc wget xzdec
 
 RUN curl -sL https://deb.nodesource.com/setup_11.x | bash -
+
+RUN tlmgr init-usertree && tlmgr install a4wide
 
 RUN apt-get install -y nodejs
 
