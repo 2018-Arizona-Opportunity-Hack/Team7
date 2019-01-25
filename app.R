@@ -239,8 +239,8 @@ server <- function(input, output) {
   questionLengths <<- NULL
   
   #set working directory to the shiny server
-  #setwd("/srv/shiny-server")
-  setwd("C:/Users/scrol_000/Documents/Hackathon 2018/December")
+  setwd("/srv/shiny-server")
+  #setwd("C:/Users/scrol_000/Documents/Hackathon 2018/December")
   
   #Generate unique number based upon system time
   seed = as.numeric(Sys.time())
