@@ -245,7 +245,7 @@ formatCSV <- function(nops_csv, qa_csv){
   for(i in 1:nrow(data)){
     for(j in 1:length(answers)){
       for(k in 1:nchar(as.character(answers[i,j]))){
-        if(substr(as.character(answers[i,j]),start=k,stop=k) == 1){
+        if(substr(formatC(as.character(answers[i,j]), width = 5, format = "d", flag = "0"),start=k,stop=k) == 1){
           user[index] <- i
           question[index] <- j
           answer[index] <- k
