@@ -639,9 +639,9 @@ server <- function(input, output) {
       
       #create the csv file of student data in the wd
       student_df <- data.frame(
-        registration = c("0000000","1000000"),
-        name = c("Jane Doe","Jane Dooe"),
-        id = c("jane_doe","jane_dooe")
+        registration = c(0:(length(files1)-1)),
+        name = c(rep("e", length(files1))),
+        id = as.numeric(c(1:length(files1)))
       )
       
       write.table(student_df, 
