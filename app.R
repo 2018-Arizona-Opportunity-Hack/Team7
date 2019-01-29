@@ -633,15 +633,15 @@ server <- function(input, output) {
       }
       
       ##Pass the png files into nops_scan
-      files1 <- list.files(path=getwd(), pattern="*.png", full.names=TRUE, recursive=FALSE)
+      files1 <- list.files(path=getwd(), pattern="*1.png", full.names=TRUE, recursive=FALSE)
       
       nops_scan(files1)
       
       #create the csv file of student data in the wd
       student_df <- data.frame(
-        registration = c(0:(length(files1)-1)),
-        name = c(rep("e", length(files1))),
-        id = as.numeric(c(1:length(files1)))
+        registration = c(0:(length(files)-1)),
+        name = c(rep("e", length(files))),
+        id = as.numeric(c(1:length(files)))
       )
       
       write.table(student_df, 
