@@ -31,6 +31,7 @@ RUN su - -c "R -e \"install.packages('pdftools', repos = 'http://cran.rstudio.co
 RUN su - -c "R -e \"install.packages('rmarkdown', repos = 'http://cran.rstudio.com/')\""
 RUN su - -c "R -e \"install.packages('utils', repos = 'http://cran.rstudio.com/')\""
 RUN su - -c "R -e \"install.packages('png', repos = 'http://cran.rstudio.com/')\""
+RUN su - -c "R -e \"install.packages('tth', repos = 'http://cran.rstudio.com/')\""
 
 RUN curl -o shiny-server-1.5.9.923-amd64.deb https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.9.923-amd64.deb && dpkg -i shiny-server-1.5.9.923-amd64.deb && rm -rf /srv/shiny-server/*
 
