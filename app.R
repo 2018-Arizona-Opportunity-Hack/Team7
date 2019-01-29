@@ -10,6 +10,8 @@ library(DT)
 library(pdftools)
 library(utils)
 
+Sys.setenv(R_ZIPCMD="/usr/bin/zip")
+
 #global variables
 answersListID <<- NULL
 previewString <<- ""
@@ -300,22 +302,15 @@ server <- function(input, output) {
   
   #Download survey
   output$downloadSurvey <- downloadHandler(
-    filename <- function() {
-      #setwd(paste0("../survey",seed))
-      
-      files2zip <- dir(paste0("../survey",seed), full.names = TRUE)
-      zip(zipfile = 'surveyZip', files = files2zip)
-      
-      #paste0("survey1", ".pdf")
+    filename = function() {
       paste0("surveyZip", ".zip")
     },
     
-    content <- function(file) {
-      print(file)
-      #file.copy("survey1.pdf", file)
-      file.copy("surveyZip.zip", file)
-      #setwd("..")
-
+    content = function(file) {
+      setwd(paste0("../survey", seed))
+      files2zip <- dir(".", full.names = TRUE)
+      zip(zipfile = file, files = files2zip)
+      setwd(paste0("../questions", seed))
     },
     #contentType = "application/pdf"
     contentType = "application/zip"
